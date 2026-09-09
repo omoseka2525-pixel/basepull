@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html><head><base target="_top">
+<style>
+  :root{--ink:#1c1a17;--muted:#6b665d;--line:#e2ddd2;--accent:#1a73e8;--accent2:#1557b0;--soft:#e8f0fe;--good:#2c6b45;--goodsoft:#e5f2ea;--bad:#b3261e;--badsoft:#fbe9e7;--warnsoft:#fbf1dc;--warn:#8a5a10}
+  *{box-sizing:border-box}
+  body{margin:0;font:13px/1.5 Roboto,Arial,sans-serif;color:var(--ink);background:#fff;padding:12px}
+  h2{font-size:15px;margin:0 0 8px}
+  label{display:block;font-size:11.5px;font-weight:600;color:var(--muted);margin:10px 0 3px}
+  input[type=text],input[type=password],select{width:100%;border:1px solid var(--line);border-radius:6px;padding:7px 8px;font:inherit}
+  .btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid transparent;border-radius:6px;padding:7px 12px;font:inherit;font-weight:600;cursor:pointer;background:#f1f3f4;color:var(--ink)}
+  .btn.primary{background:var(--accent);color:#fff}.btn.primary:hover{background:var(--accent2)}
+  .btn.link{background:none;padding:4px 6px;color:var(--accent)}
+  .btn:disabled{opacity:.5;cursor:default}
+  .row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px}
+  .card{border:1px solid var(--line);border-radius:8px;padding:10px;margin-top:10px}
+  .job{border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-top:8px}
+  .job b{display:block}
+  .meta{font-size:11.5px;color:var(--muted)}
+  .pill{display:inline-block;border-radius:999px;padding:1px 8px;font-size:11px;font-weight:600;background:var(--soft);color:var(--accent2)}
+  .pill.pro{background:var(--goodsoft);color:var(--good)}
+  .msg{border-radius:6px;padding:8px 10px;margin-top:8px;font-size:12.5px}
+  .msg.ok{background:var(--goodsoft);color:var(--good)}.msg.err{background:var(--badsoft);color:var(--bad)}.msg.warn{background:var(--warnsoft);color:var(--warn)}
+  .hidden{display:none}
+  .check{display:flex;gap:6px;align-items:center;font-size:12.5px;margin-top:6px;color:var(--ink);font-weight:500}
+  .top{display:flex;justify-content:space-between;align-items:center}
+  .spin{display:inline-block;width:12px;height:12px;border:2px solid #ccc;border-top-color:var(--accent);border-radius:50%;animation:s .8s linear infinite;vertical-align:-2px}
+  @keyframes s{to{transform:rotate(360deg)}}
+  footer{margin-top:14px;font-size:11px;color:var(--muted)}footer a{color:var(--muted)}
+</style></head>
+<body>
+<div class="top"><h2>Basepull</h2><span id="plan" class="pill">…</span></div>
+<div id="msg"></div>
+
+<!-- Token -->
+<div id="tokenBox" class="card hidden">
+  <b>1. Connect Airtable</b>
+  <div class="meta">Create a personal access token at airtable.com/create/tokens with scopes <code>data.records:read</code> and <code>schema.bases:read</code>, and add the bases you want to sync. The token is stored only in your Google account.</div>
+  <label>Personal access token</label>
+  <input type="password" id="token" placeholder="pat…">
+  <div class="row"><button class="btn primary" id="saveToken">Save &amp; test</button></div>
+</div>
+
+<!-- Editor -->
+<div id="editor" class="card hidden">
+  <b id="editorTitle">New sync</b>
+  <label>Base</label><select id="base"></select>
+  <label>Table</label><select id="table"></select>
+  <label>View (optional)</label><select id="view"><option value="">All records, all fields</option></select>
+  <label>Write to sheet tab</label><input type="text" id="sheetName" placeholder="defaults to the table name">
+  <label class="check"><input type="checkbox" id="includeId"> Include Airtable record ID column</label>
+  <label class="check"><input type="checkbox" id="includeCreated"> Include created time column</label>
+  <label>Schedule</label>
+  <select id="interval"><option value="0">Manual only</option><option value="60">Every hour (Pro)</option><option value="360">Every 6 hours (Pro)</option><option value="1440">Daily (Pro)</option></select>
+  <div class="row"><button class="btn primary" id="saveJob">Save sync</button><button class="btn" id="cancelJob">Cancel</button></div>
+</div>
+
+<!-- Jobs -->
+<div id="jobsBox" class="hidden">
+  <div class="row" style="justify-content:space-between"><b>Syncs in this spreadsheet</b><button class="btn" id="newJob">+ New sync</button></div>
+  <div id="jobs"></div>
+  <div class="row"><button class="btn" id="runAll">Run all now</button></div>
+</div>
+
+<div id="upsell" class="card hidden">
+  <b>Upgrade to Pro — $19/month</b>
+  <div class="meta">Unlimited syncs, hourly/daily schedules, up to 200,000 rows per sync. Cancel anytime.</div>
+  <div class="row"><a class="btn primary" id="buy" href="#" target="_blank">Get Pro</a><button class="btn link" id="refreshLic">I already paid</button></div>
+</div>
+
+<footer><a href="#" id="manage" target="_blank">Manage subscription</a> · <a href="#" id="site" target="_blank">Help</a> · <a href="#" id="forget">Disconnect Airtable</a></footer>
+
+<script>
+var S = { init: null, bases: [], tables: [], editing: null };
+function $(id){ return document.getElementById(id); }
+function show(id, on){ $(id).classList.toggle('hidden', !on); }
+function msg(text, kind){ $('msg').innerHTML = text ? '<div class="msg '+(kind||'ok')+'">'+text+'</div>' : ''; }
+function busy(btn, on){ btn.disabled = on; if(on){ btn.dataset.t = btn.innerHTML; btn.innerHTML = '<span class="spin"></span>'; } else if(btn.dataset.t){ btn.innerHTML = btn.dataset.t; } }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function rpc(fn){ var args = [].slice.call(arguments,1); return new Promise(function(res,rej){ google.script.run.withSuccessHandler(res).withFailureHandler(function(e){ rej(new Error(e.message||String(e))); })[fn].apply(null,args); }); }
+
+function render(){
+  var i = S.init;
+  $('plan').textContent = i.plan.name + (i.plan.pro ? '' : ' plan'); $('plan').className = 'pill' + (i.plan.pro ? ' pro' : '');
+  $('buy').href = i.checkoutUrl; $('manage').href = i.portalUrl; $('site').href = i.siteUrl;
+  show('tokenBox', !i.hasToken);
+  show('jobsBox', i.hasToken);
+  show('upsell', !i.plan.pro);
+  renderJobs(i.jobs);
+}
+function renderJobs(jobs){
+  S.init.jobs = jobs;
+  var h = jobs.map(function(j){
+    var when = j.interval ? (j.interval==60?'hourly':j.interval==360?'every 6h':'daily') : 'manual';
+    var st = j.lastStatus ? (j.lastStatus.indexOf('error')===0 ? '<span style="color:var(--bad)">'+esc(j.lastStatus)+'</span>' : esc(j.lastStatus)+' · '+j.lastRows+' rows') : 'never run';
+    return '<div class="job"><b>'+esc(j.baseName)+' / '+esc(j.tableName)+(j.viewName?' ('+esc(j.viewName)+')':'')+'</b>'+
+      '<div class="meta">→ tab "'+esc(j.sheetName)+'" · '+when+'<br>Last: '+st+(j.lastRun?' · '+new Date(j.lastRun).toLocaleString():'')+'</div>'+
+      '<div class="row"><button class="btn primary" data-run="'+j.id+'">Run now</button><button class="btn" data-edit="'+j.id+'">Edit</button><button class="btn link" data-del="'+j.id+'">Delete</button></div></div>';
+  }).join('');
+  $('jobs').innerHTML = h || '<div class="meta" style="margin-top:8px">No syncs yet. Click "New sync".</div>';
+  $('runAll').classList.toggle('hidden', !jobs.length);
+}
+
+async function loadBases(){ S.bases = await rpc('bpListBases'); renderBases(); }
+function renderBases(){
+  $('base').innerHTML = '<option value="">Choose a base…</option>' + S.bases.map(function(b){ return '<option value="'+esc(b.id)+'">'+esc(b.name)+'</option>'; }).join('');
+}
+async function loadTables(baseId){
+  $('table').innerHTML = '<option>Loading…</option>';
+  S.tables = baseId ? await rpc('bpListTables', baseId) : [];
+  $('table').innerHTML = '<option value="">Choose a table…</option>' + S.tables.map(function(t){ return '<option value="'+esc(t.id)+'">'+esc(t.name)+'</option>'; }).join('');
+  loadViews('');
+}
+function loadViews(tableId){
+  var t = S.tables.filter(function(x){ return x.id===tableId; })[0];
+  $('view').innerHTML = '<option value="">All records, all fields</option>' + ((t&&t.views)||[]).map(function(v){ return '<option value="'+esc(v.id)+'">'+esc(v.name)+'</option>'; }).join('');
+  if (t && !$('sheetName').value) $('sheetName').placeholder = t.name;
+}
+async function openEditor(job){
+  S.editing = job || null;
+  $('editorTitle').textContent = job ? 'Edit sync' : 'New sync';
+  show('editor', true); show('jobsBox', false); msg('');
+  try {
+    if (!S.bases.length) await loadBases(); else renderBases();
+    $('base').value = job ? job.baseId : '';
+    await loadTables($('base').value);
+    $('table').value = job ? job.tableId : '';
+    loadViews($('table').value);
+    $('view').value = job ? job.viewId : '';
+    $('sheetName').value = job ? job.sheetName : '';
+    $('includeId').checked = !!(job && job.includeId);
+    $('includeCreated').checked = !!(job && job.includeCreated);
+    $('interval').value = job ? String(job.interval) : '0';
+  } catch(e){ msg(esc(e.message), 'err'); }
+}
+function closeEditor(){ show('editor', false); show('jobsBox', true); }
+
+$('saveToken').onclick = async function(){
+  busy(this, true); msg('');
+  try { S.bases = await rpc('bpSaveToken', $('token').value); S.init.hasToken = true; $('token').value=''; msg('Connected. Found '+S.bases.length+' base(s).'); render(); if(!S.init.jobs.length) openEditor(null); }
+  catch(e){ msg(esc(e.message), 'err'); }
+  busy(this, false);
+};
+$('base').onchange = function(){ loadTables(this.value).catch(function(e){ msg(esc(e.message),'err'); }); };
+$('table').onchange = function(){ loadViews(this.value); };
+$('newJob').onclick = function(){ openEditor(null); };
+$('cancelJob').onclick = closeEditor;
+$('saveJob').onclick = async function(){
+  busy(this, true); msg('');
+  var base = S.bases.filter(function(b){ return b.id===$('base').value; })[0] || {};
+  var table = S.tables.filter(function(t){ return t.id===$('table').value; })[0] || {};
+  var view = ((table.views)||[]).filter(function(v){ return v.id===$('view').value; })[0] || {};
+  var job = { id: S.editing ? S.editing.id : '', baseId: base.id, baseName: base.name, tableId: table.id, tableName: table.name, viewId: view.id||'', viewName: view.name||'', sheetName: $('sheetName').value, includeId: $('includeId').checked, includeCreated: $('includeCreated').checked, interval: Number($('interval').value) };
+  try { renderJobs(await rpc('bpSaveJob', job)); closeEditor(); msg('Saved. Click "Run now" to sync.'); }
+  catch(e){ msg(esc(e.message), 'err'); }
+  busy(this, false);
+};
+$('jobs').onclick = async function(ev){
+  var b = ev.target.closest('button'); if(!b) return;
+  var id = b.dataset.run || b.dataset.edit || b.dataset.del;
+  var job = S.init.jobs.filter(function(j){ return j.id===id; })[0];
+  if (b.dataset.edit) return openEditor(job);
+  if (b.dataset.del){ if(!confirm('Delete this sync? The sheet tab is kept.')) return; try{ renderJobs(await rpc('bpDeleteJob', id)); }catch(e){ msg(esc(e.message),'err'); } return; }
+  busy(b, true); msg('Syncing… large tables can take a minute.', 'warn');
+  try { renderJobs(await rpc('bpRunJob', id)); msg('Synced.'); } catch(e){ msg(esc(e.message), 'err'); try{ renderJobs((await rpc('bpInit')).jobs); }catch(_){} }
+};
+$('runAll').onclick = async function(){ busy(this,true); msg('Running all syncs…','warn'); try{ renderJobs(await rpc('bpRunAllRpc')); msg('Done.'); }catch(e){ msg(esc(e.message),'err'); } busy(this,false); };
+$('refreshLic').onclick = async function(){ busy(this,true); try{ S.init.plan = await rpc('bpRefreshLicense'); render(); msg(S.init.plan.pro ? 'Pro is active. Thank you!' : 'No active subscription found for '+esc(S.init.email)+'. Use the same email at checkout.', S.init.plan.pro?'ok':'warn'); }catch(e){ msg(esc(e.message),'err'); } busy(this,false); };
+$('forget').onclick = async function(ev){ ev.preventDefault(); if(!confirm('Remove the saved Airtable token?')) return; await rpc('bpForgetToken'); S.init.hasToken=false; render(); };
+
+rpc('bpInit').then(function(i){ S.init = i; render(); if(i.hasToken && !i.jobs.length) openEditor(null); }).catch(function(e){ msg(esc(e.message),'err'); });
+</script>
+</body></html>

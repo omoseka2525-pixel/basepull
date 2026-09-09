@@ -16,6 +16,12 @@ test/      Node製テスト（純粋ロジック／GASモックE2E／サイド�
 
 テスト: `node test/lib.test.js` は `node -e "require('module').Module._extensions['.gs']=require('module').Module._extensions['.js'];require('./test/lib.test.js')"`、`node test/gas-mock.test.js`、`NODE_PATH=$(npm root -g) node test/sidebar.test.js`
 
+## 現在の状態（2026-09-09）
+- バックエンド: デプロイ済み（アップスクリプト「Basepull License」）。台帳「Basepull licenses」作成済み、omoseka2525@gmail.com はプロ扱い
+- ストライプ: 商品「Basepull Pro」$19/月、決済リンク https://buy.stripe.com/bJe7sLc3H52M57za7tew80X、ウェブフック（4イベント）、カスタマーポータル https://billing.stripe.com/p/login/aFa4gz7Nrbra1VndjFew800
+- アドオン: アップスクリプト「Basepull」に配置・BP_CONFIG 設定済み。テストデプロイ（インストール済み・有効）で「Basepull test」スプレッドシートに接続
+- 未完: `STRIPE_SECRET` スクリプトプロパティ（解約時のメール逆引き用。未設定でも checkout.session.completed で登録はされる）、クラウドプロジェクト（上限増加を申請中）、OAuth同意画面、マーケットプレイス掲載
+
 ## 公開手順（キッシュさんのグーグルアカウントで行う作業）
 
 ### 1. バックエンドを先に出す（10分）
@@ -40,7 +46,7 @@ test/      Node製テスト（純粋ロジック／GASモックE2E／サイド�
 
 ### 4. グーグルクラウドプロジェクトとOAuth（20分＋審査待ち）
 1. console.cloud.google.com で新規プロジェクト「Basepull」を作成。APIとサービス → ライブラリで「Google Workspace Marketplace SDK」を有効化。
-2. OAuth同意画面: 外部、アプリ名 Basepull、サポートメール、ロゴ、ホームページ `https://omoseka2525-pixel.github.io/basepull/`、プライバシー `…/privacy.html`、利用規約 `…/terms.html`、承認済みドメイン `github.io`。スコープは `appsscript.json` の4つ。
+2. OAuth同意画面: 外部、アプリ名 Basepull、サポートメール、ロゴ、ホームページ `https://omoseka2525-pixel.github.io/basepull/`、プライバシー `…/privacy.html`、利用規約 `…/terms.html`、承認済みドメイン `github.io`。スコープは `appsscript.json` の5つ。
 3. アップスクリプト側: プロジェクト設定 → 「Google Cloud Platform（GCP）プロジェクト」→ プロジェクト番号を入力して変更。
 4. 同意画面で「確認のために送信」。非機密スコープのみなら通常は数日（ブランド確認）。※`spreadsheets` フルスコープにした場合は動画デモの提出を求められる。
 

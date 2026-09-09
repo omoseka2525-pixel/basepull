@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Basepull — Airtable to Google Sheets sync add-on (hourly, automatic, $19/mo)</title>
+<meta name="description" content="Sync Airtable tables and views into Google Sheets automatically. A Google Sheets add-on that runs hourly or daily, keeps your Sheets copy fresh, and costs $19/month instead of $32–49 for Coupler or Coefficient. Free plan included.">
+<meta property="og:title" content="Basepull — Airtable → Google Sheets, on a schedule">
+<meta property="og:description" content="Pull any Airtable table or view into Google Sheets every hour. No Zapier, no Airtable seats for viewers.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Basepull","applicationCategory":"BusinessApplication","operatingSystem":"Web (Google Sheets add-on)","offers":[{"@type":"Offer","price":"0","priceCurrency":"USD","name":"Free"},{"@type":"Offer","price":"19","priceCurrency":"USD","name":"Pro monthly"}],"description":"Scheduled one-way sync from Airtable to Google Sheets."}</script>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="./"><span class="mark">▤</span>Basepull</a>
+  <nav><a href="#how">How it works</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a href="airtable-to-google-sheets.html">Guide</a></nav>
+</div></header>
+
+<main class="wrap">
+  <section class="hero">
+    <span class="badge">Google Sheets add-on</span>
+    <h1>Airtable → Google Sheets, every hour, automatically.</h1>
+    <p class="lead">Pick a base, a table and a view. Basepull writes it into a tab in your spreadsheet and keeps it fresh on a schedule — so your pivots, charts and Looker Studio reports never go stale, and your viewers never need an Airtable seat.</p>
+    <a class="btn primary big" id="installBtn" href="#install">Install from Google Workspace Marketplace</a>
+    <p style="color:var(--muted);font-size:14px;margin-top:10px">Free for one manual sync · Pro $19/month · cancel anytime</p>
+  </section>
+
+  <section class="block" id="how">
+    <h2>Three steps, no Zapier</h2>
+    <div class="steps">
+      <div class="card"><h3>Paste an Airtable token</h3><p>Create a read-only personal access token in Airtable (two scopes, one minute). It is stored in your Google account only — never on our servers.</p></div>
+      <div class="card"><h3>Choose base → table → view</h3><p>Views are respected: hidden fields stay hidden, the field order matches Airtable, filters and sorts apply. Attachments become URLs, linked records become names.</p></div>
+      <div class="card"><h3>Set a schedule</h3><p>Manual, hourly, every 6 hours or daily. The whole tab is replaced each run, so formulas in other tabs that reference it keep working.</p></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Why not Coupler, Coefficient or a dead add-on?</h2>
+    <div class="tablewrap"><table class="compare">
+      <tr><th></th><th>Basepull</th><th>Coupler.io</th><th>Coefficient</th><th>Legacy Marketplace add-ons</th></tr>
+      <tr><td>Price for scheduled sync</td><td><b>$19/mo flat</b></td><td>$32/mo (5k rows)</td><td>$49/mo</td><td>Free, but abandoned or closed</td></tr>
+      <tr><td>Row limit</td><td>200,000</td><td>5,000 on Starter</td><td>varies</td><td>—</td></tr>
+      <tr><td>Runs inside Sheets</td><td>Yes (add-on sidebar)</td><td>Separate web app</td><td>Add-on</td><td>Yes</td></tr>
+      <tr><td>Airtable views &amp; hidden fields</td><td>Yes</td><td>Yes</td><td>Yes</td><td>Partial</td></tr>
+      <tr><td>Your data passes through vendor servers</td><td><b>No</b> — Sheets talks to Airtable directly</td><td>Yes</td><td>Yes</td><td>—</td></tr>
+    </table></div>
+  </section>
+
+  <section class="block" id="pricing">
+    <h2>Pricing</h2>
+    <div class="grid3">
+      <div class="card price"><h3>Free</h3><div class="amt">$0</div>
+        <ul><li>1 sync per spreadsheet</li><li>Run manually from the sidebar</li><li>Up to 1,000 rows</li><li>Views, attachments, linked records</li></ul></div>
+      <div class="card price hot"><span class="badge">Most popular</span><h3>Pro</h3><div class="amt">$19<small>/month</small></div>
+        <ul><li>Unlimited syncs, unlimited spreadsheets</li><li>Hourly, 6-hourly or daily schedule</li><li>Up to 200,000 rows per sync</li><li>Email support within 1 business day</li></ul>
+        <a class="btn primary" href="#install" style="width:100%">Start with the free plan</a>
+        <p style="font-size:13px;color:var(--muted);margin:8px 0 0">Upgrade from inside the add-on. Billing by Stripe.</p></div>
+      <div class="card"><h3>Need more?</h3><p>Two-way sync, Notion or Stripe sources, or a team plan? Email <a href="mailto:hello@basepull.app">hello@basepull.app</a> — Pro subscribers vote on the roadmap.</p></div>
+    </div>
+  </section>
+
+  <section class="block faq" id="faq">
+    <h2>FAQ</h2>
+    <details><summary>Is it one-way or two-way?</summary><p>One-way, Airtable → Sheets. The Sheets tab is a read-only mirror that is replaced on every run. Edit in Airtable; analyse in Sheets.</p></details>
+    <details><summary>Does my data go through your servers?</summary><p>No. The add-on runs as Google Apps Script inside your Google account and calls the Airtable API directly. The only thing our server ever sees is your email address, to check whether you are a Pro subscriber.</p></details>
+    <details><summary>Which Airtable field types are supported?</summary><p>All of them. Text, numbers, dates and checkboxes come through as-is. Multiple selects, linked records, lookups and collaborators are joined with commas; attachments become their URLs; formula errors show as <code>#ERROR</code>.</p></details>
+    <details><summary>How often can it run?</summary><p>Google limits add-on schedules to once per hour. Basepull offers hourly, every 6 hours and daily on Pro. Free runs whenever you click "Run now".</p></details>
+    <details><summary>What about Airtable's API limits?</summary><p>Airtable allows 5 requests per second per base and 100 records per request. A 50,000-row table syncs in about 2 minutes. Basepull backs off automatically if Airtable rate-limits.</p></details>
+    <details><summary>Can I cancel?</summary><p>Yes, any time from "Manage subscription" in the sidebar. You keep Pro until the end of the billing period. Refunds within 14 days, no questions asked.</p></details>
+  </section>
+
+  <section class="block" id="install">
+    <div class="panel" style="text-align:center">
+      <h2 style="font-size:24px">Install Basepull</h2>
+      <p style="color:var(--muted)">Open Google Sheets → Extensions → Add-ons → Get add-ons → search "Basepull", or use the button below once the Marketplace listing is approved.</p>
+      <a class="btn primary big" id="installBtn2" href="https://workspace.google.com/marketplace/search/basepull" target="_blank" rel="noopener">Open Google Workspace Marketplace</a>
+    </div>
+  </section>
+</main>
+
+<footer><div class="wrap">© 2026 Omoseka Inc. · <a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="mailto:hello@basepull.app">Contact</a> · Airtable is a trademark of Formagrid Inc.; Basepull is not affiliated with Airtable or Google.</div></footer>
+</body>
+</html>

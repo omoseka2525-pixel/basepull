@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Airtable Importer is closed — the best alternatives for Google Sheets (2026)</title>
+<meta name="description" content="Railsware's Airtable Importer add-on for Google Sheets is closed and the other free add-on is abandoned. Here is what to use instead, with prices and limits.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css"></head>
+<body>
+<header class="top"><div class="wrap"><a class="brand" href="./"><span class="mark">▤</span>Basepull</a><nav><a href="./#pricing">Pricing</a><a href="airtable-to-google-sheets.html">Full guide</a></nav></div></header>
+<main class="article">
+<h1>Airtable Importer alternative: what to use now that it's closed</h1>
+<p>If you landed here, you probably opened Google Sheets, went to Extensions and found that <strong>Airtable Importer</strong> — the free add-on from Railsware that thousands of teams used to pull Airtable into Sheets — is now labelled <em>[CLOSED]</em> on the Marketplace. Railsware folded it into Coupler.io, its paid data-integration product. The other free listing, "AirTable 2 Google Sheet Sync", sits at two stars and has not been updated since 2024; recent reviews say it no longer launches.</p>
+<p>So what should you use instead? It depends on how much you sync and whether you need it on a schedule.</p>
+
+<h2>Option 1: Coupler.io (from $32/month)</h2>
+<p>The official successor. It is a capable web app with dozens of sources, but the free plan is now limited to 100 rows and manual runs; scheduled Airtable → Sheets sync starts on the Starter plan at $32/month with a 5,000-row cap. Airtable community threads are full of people asking for something cheaper for simple one-way sync — which is the gap the tools below fill.</p>
+
+<h2>Option 2: Coefficient (from $49/month)</h2>
+<p>Excellent if you already use it for Salesforce or HubSpot and want Airtable alongside; expensive if Airtable is the only source you need.</p>
+
+<h2>Option 3: Basepull ($19/month, free manual plan)</h2>
+<p>Basepull is a Google Sheets add-on that does one thing: mirror an Airtable table or view into a Sheets tab on a schedule (hourly, 6-hourly or daily). It runs entirely inside your Google account as Apps Script and talks to the Airtable API directly, so your records never pass through a vendor server. The free plan gives you one manually-refreshed sync of up to 1,000 rows; Pro is a flat $19/month for unlimited syncs and up to 200,000 rows.</p>
+<div class="tablewrap"><table class="compare">
+<tr><th></th><th>Airtable Importer (old)</th><th>Coupler.io</th><th>Basepull</th></tr>
+<tr><td>Status</td><td>Closed</td><td>Active</td><td>Active</td></tr>
+<tr><td>Scheduled sync</td><td>Yes</td><td>$32/mo+</td><td>$19/mo</td></tr>
+<tr><td>Free tier</td><td>Everything</td><td>100 rows, manual</td><td>1,000 rows, manual</td></tr>
+<tr><td>Data path</td><td>Direct</td><td>Via Coupler servers</td><td>Direct (your Google account → Airtable)</td></tr>
+<tr><td>Views / hidden fields</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+</table></div>
+
+<h2>Migrating from Airtable Importer</h2>
+<ol>
+<li>Note which base/table/view each of your old imports used and which tab it wrote to.</li>
+<li>Install Basepull, paste a read-only Airtable token, and recreate each import as a "sync" pointing at the same tab name. Basepull replaces the tab's contents on each run, so downstream formulas keep working.</li>
+<li>Run each sync once, then set the schedule. Remove the old add-on.</li>
+</ol>
+<p><a class="btn primary" href="./#install">Install Basepull</a></p>
+</main>
+<footer><div class="wrap">© 2026 Omoseka Inc. · <a href="terms.html">Terms</a><a href="privacy.html">Privacy</a> · Airtable Importer and Coupler.io are products of Railsware; Basepull is unaffiliated.</div></footer>
+</body></html>

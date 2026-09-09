@@ -1,0 +1,30 @@
+const { chromium } = require('playwright'); const fs = require('fs'); const assert = require('assert');
+(async () => {
+  const html = fs.readFileSync(__dirname + '/../addon/Sidebar.html', 'utf8');
+  const mock = `<script>
+  window.__calls=[]; var state={hasToken:false,jobs:[],sheets:['Sheet1'],plan:{pro:false,name:'Free',limits:{jobs:1,rows:1000,schedule:false}},email:'me@x.com',checkoutUrl:'https://buy/x',portalUrl:'https://portal',siteUrl:'https://site'};
+  var api={ bpInit:()=>state, bpSaveToken:t=>{ if(!/^pat/.test(t)) throw new Error('bad token'); state.hasToken=true; return [{id:'appA',name:'CRM'}]; }, bpListBases:()=>[{id:'appA',name:'CRM'}], bpListTables:()=>[{id:'tblT',name:'Leads',views:[{id:'viwV',name:'Open'}]}], bpSaveJob:j=>{ if(j.interval>0) throw new Error('Scheduling is a Pro feature'); j.id='j1'; j.sheetName=j.sheetName||j.tableName; state.jobs=[j]; return state.jobs; }, bpRunJob:()=>{ state.jobs[0].lastStatus='ok'; state.jobs[0].lastRows=42; state.jobs[0].lastRun=new Date().toISOString(); return state.jobs; }, bpDeleteJob:()=>{ state.jobs=[]; return []; }, bpRefreshLicense:()=>state.plan, bpForgetToken:()=>true, bpRunAllRpc:()=>state.jobs };
+  window.google={script:{run:new Proxy({},{get(_,k){ if(k==='withSuccessHandler') return function(ok){ return {withFailureHandler(fail){ return new Proxy({},{get(_,fn){ return function(){ window.__calls.push(fn); try{ var r=api[fn].apply(null,arguments); setTimeout(()=>ok(JSON.parse(JSON.stringify(r===undefined?null:r))),5);}catch(e){ setTimeout(()=>fail({message:e.message}),5);} }; }}); }}; }; }})}};
+  </script>`;
+  const browser = await chromium.launch(); const page = await browser.newPage({ viewport: { width: 340, height: 700 } });
+  const errors = []; page.on('pageerror', e => errors.push(e.message));
+  await page.setContent(html.replace('<script>', mock + '<script>'));
+  await page.waitForTimeout(100);
+  assert.ok(!(await page.isHidden('#tokenBox')), 'token box visible');
+  await page.fill('#token', 'bad'); await page.click('#saveToken'); await page.waitForTimeout(50);
+  assert.ok((await page.textContent('#msg')).includes('bad token'));
+  await page.fill('#token', 'patAAA.bbb'); await page.click('#saveToken'); await page.waitForTimeout(100);
+  assert.ok(!(await page.isHidden('#editor')), 'editor opened after connect');
+  await page.selectOption('#base', 'appA'); await page.waitForTimeout(50);
+  await page.selectOption('#table', 'tblT'); await page.selectOption('#view', 'viwV');
+  await page.selectOption('#interval', '60'); await page.click('#saveJob'); await page.waitForTimeout(50);
+  assert.ok((await page.textContent('#msg')).includes('Pro feature'));
+  await page.selectOption('#interval', '0'); await page.click('#saveJob'); await page.waitForTimeout(50);
+  assert.ok((await page.textContent('#jobs')).includes('CRM / Leads (Open)'));
+  await page.click('[data-run="j1"]'); await page.waitForTimeout(80);
+  assert.ok((await page.textContent('#jobs')).includes('42 rows'));
+  await page.screenshot({ path: '/mnt/user-data/outputs/basepull-sidebar.png' });
+  assert.deepStrictEqual(errors, []);
+  console.log('sidebar test passed; calls:', (await page.evaluate(() => window.__calls)).join(','));
+  await browser.close();
+})().catch(e => { console.error(e); process.exit(1); });

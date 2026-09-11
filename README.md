@@ -46,7 +46,7 @@ test/      Node製テスト（純粋ロジック／GASモックE2E／サイド�
 
 ### 4. グーグルクラウドプロジェクトとOAuth（20分＋審査待ち）
 1. console.cloud.google.com で新規プロジェクト「Basepull」を作成。APIとサービス → ライブラリで「Google Workspace Marketplace SDK」を有効化。
-2. OAuth同意画面: 外部、アプリ名 Basepull、サポートメール、ロゴ、ホームページ `https://omoseka2525-pixel.github.io/basepull/`、プライバシー `…/privacy.html`、利用規約 `…/terms.html`、承認済みドメイン `github.io`。スコープは `appsscript.json` の5つ。
+2. OAuth同意画面: 外部、アプリ名 Basepull、サポートメール、ロゴ、ホームページ `https://basepull.app/`、プライバシー `…/privacy.html`、利用規約 `…/terms.html`、承認済みドメイン `basepull.app`。スコープは `appsscript.json` の5つ。
 3. アップスクリプト側: プロジェクト設定 → 「Google Cloud Platform（GCP）プロジェクト」→ プロジェクト番号を入力して変更。
 4. 同意画面で「確認のために送信」。非機密スコープのみなら通常は数日（ブランド確認）。※`spreadsheets` フルスコープにした場合は動画デモの提出を求められる。
 

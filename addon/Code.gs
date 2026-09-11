@@ -14,7 +14,7 @@ var BP_CONFIG = {
   BACKEND_SECRET: '',       // must equal LICENSE_SECRET in the backend's Script Properties
   CHECKOUT_URL: 'https://buy.stripe.com/REPLACE_ME',
   PORTAL_URL: 'https://billing.stripe.com/p/login/REPLACE_ME',
-  SITE_URL: 'https://omoseka2525-pixel.github.io/basepull/',
+  SITE_URL: 'https://basepull.app/',
   LICENSE_CACHE_HOURS: 6
 };
 

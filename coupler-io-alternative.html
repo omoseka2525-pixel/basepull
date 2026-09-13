@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Coupler.io alternative for Airtable → Google Sheets (hourly sync for $19/month)</title>
+<meta name="description" content="Coupler.io reserves hourly refresh for its $259/month Pro plan. If you only need one Airtable base mirrored into Google Sheets on an hourly schedule, here are cheaper ways to do it.">
+<link rel="canonical" href="https://basepull.app/coupler-io-alternative.html">
+<link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css"></head>
+<body>
+<header class="top"><div class="wrap"><a class="brand" href="./"><span class="mark">&#9636;</span>Basepull</a><nav><a href="./#pricing">Pricing</a><a href="airtable-to-google-sheets.html">Full guide</a></nav></div></header>
+<main class="article">
+<h1>A cheaper Coupler.io alternative for Airtable &rarr; Google Sheets</h1>
+<p class="lede">Updated September 2026.</p>
+<p>Coupler.io is a good product. It connects hundreds of sources, it handles transformations, and if you are building a reporting stack for a whole company it earns its price. This page is not an argument that it is bad. It is for the much narrower case where people keep getting surprised by the bill:</p>
+<p><strong>You have one Airtable&reg; base. You want it mirrored into a Google Sheets&trade; tab. You want it refreshed every hour.</strong></p>
+
+<h2>Why that specific case gets expensive</h2>
+<p>Coupler.io's plans are structured around refresh frequency, and hourly sits near the top. As of September 2026 its public pricing is: Free at 100 rows per run and manual only; Starter at <strong>$32/month</strong> for 5,000 rows per run with a <em>daily</em> schedule; Active at <strong>$132/month</strong>, still daily; and <strong>hourly refresh starting on Pro at $259/month</strong>.</p>
+<p>So the honest version of the question is not "is Coupler.io worth $32?" &mdash; it is "am I about to pay $259 a month to move one table into one spreadsheet every hour?"</p>
+<p>Coefficient is structured the same way: Starter at $49/month is daily, and hourly starts on Pro at $99 per user per month.</p>
+
+<h2>Option A: drop to daily</h2>
+<p>Worth asking honestly. If the sheet feeds a weekly report or a dashboard people look at each morning, a nightly refresh is genuinely enough, and Starter-tier pricing is fine. Plenty of teams pay for hourly out of habit rather than need.</p>
+
+<h2>Option B: write it yourself</h2>
+<p>An Airtable personal access token, a <code>UrlFetchApp</code> call to the Airtable REST API, a loop over the pages, <code>setValues()</code> into the tab, and an hourly time-driven trigger. Free, and about an afternoon's work if you are comfortable in Apps Script.</p>
+<p>The cost is ongoing rather than upfront: rate limits (five requests per second per base), pagination, linked records and lookups arriving as nested objects, attachment URLs that now expire after a couple of hours, new fields appearing in Airtable, and triggers that fail quietly. <a href="airtable-to-google-sheets.html">The full guide covers this route in more detail.</a></p>
+
+<h2>Option C: a single-purpose add-on</h2>
+<p>Basepull is ours, and it is deliberately narrow: it mirrors an Airtable table or view into a Sheets tab on a schedule, and does nothing else. No transformation layer, no other sources, no web app to log into &mdash; it is a sidebar in the spreadsheet you already have open.</p>
+<p>Because it is narrow, the pricing is flat: <strong>$19/month</strong> for unlimited syncs across unlimited spreadsheets, hourly schedule included, up to 200,000 rows per sync. The free plan runs one sync of up to 1,000 rows manually, which is enough to prove it works on your data before you pay anything.</p>
+<p>One structural difference worth knowing: Basepull runs as Google Apps Script inside your own Google account and calls Airtable directly. Your records go from Airtable to your spreadsheet without passing through our servers. Whether that matters depends on your compliance situation, but it is a real difference from hosted integration platforms.</p>
+
+<div class="tablewrap"><table class="compare">
+<tr><th></th><th>Coupler.io</th><th>Coefficient</th><th>Own Apps Script</th><th>Basepull</th></tr>
+<tr><td>Hourly refresh from</td><td>$259/mo</td><td>$99/user/mo</td><td>Free</td><td>$19/mo</td></tr>
+<tr><td>Daily refresh from</td><td>$32/mo</td><td>$49/mo</td><td>Free</td><td>$19/mo</td></tr>
+<tr><td>Free tier</td><td>100 rows, manual</td><td>Manual only</td><td>&mdash;</td><td>1,000 rows, manual</td></tr>
+<tr><td>Other data sources</td><td>Hundreds</td><td>Many</td><td>Whatever you build</td><td>Airtable only</td></tr>
+<tr><td>Transformations</td><td>Yes</td><td>Yes</td><td>Whatever you build</td><td>No &mdash; views only</td></tr>
+<tr><td>Setup time</td><td>Minutes</td><td>Minutes</td><td>An afternoon</td><td>Minutes</td></tr>
+<tr><td>Maintenance</td><td>None</td><td>None</td><td>Yours</td><td>None</td></tr>
+<tr><td>Data path</td><td>Vendor servers</td><td>Vendor servers</td><td>Direct</td><td>Direct</td></tr>
+</table></div>
+<p class="muted">Competitor prices from their public pricing pages, September 2026. They change &mdash; check before you buy.</p>
+
+<h2>When you should stay with Coupler.io</h2>
+<p>Genuinely: if you sync more than a couple of sources, if you need joins or transformations before the data lands, if you push to BigQuery or Looker Studio as well as Sheets, or if you want one vendor and one invoice for the whole reporting stack. Replacing that with a single-purpose add-on would be a downgrade.</p>
+<p>Switch only if your actual usage is "one or two Airtable tables into Sheets, on a schedule" &mdash; which is a surprisingly common way to end up on a $259 plan.</p>
+
+<h2>Moving over</h2>
+<ol>
+<li>Note the base, table, view and destination tab of each importer you run today.</li>
+<li>Create an Airtable personal access token with <code>data.records:read</code> and <code>schema.bases:read</code>, scoped to those bases only.</li>
+<li>Recreate each importer as a sync writing to the same tab name, so downstream formulas and dashboards do not move.</li>
+<li>Run once, compare row counts, then set the schedule and cancel the old plan.</li>
+</ol>
+<p><a class="btn primary" href="./#install">Get Basepull</a></p>
+</main>
+<footer><div class="wrap">&copy; 2026 Omoseka Inc. &middot; <a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="tokushoho.html">&#29305;&#21830;&#27861;</a><a href="mailto:mail@omoseka.com">Contact</a> &middot; Coupler.io is a product of Railsware; Coefficient is a product of Coefficient, Inc.; Basepull is unaffiliated with either. Google Sheets&trade; is a trademark of Google LLC. Airtable&reg; is a trademark of Formagrid Inc.</div></footer>
+</body></html>

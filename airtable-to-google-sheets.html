@@ -1,56 +1,76 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>How to sync Airtable to Google Sheets automatically (2026 guide: 4 methods compared)</title>
-<meta name="description" content="Four ways to export Airtable to Google Sheets and keep it updated: CSV export, the IMPORTDATA trick, Zapier/Make, and a scheduled add-on. Pros, cons, cost and row limits of each.">
+<title>How to sync Airtable to Google Sheets automatically (2026: 5 methods compared)</title>
+<meta name="description" content="Five ways to get Airtable data into Google Sheets and keep it fresh: CSV export, IMPORTDATA, Apps Script, Zapier/Make and a scheduled add-on. Real prices, row limits and how often each one can actually refresh.">
+<link rel="canonical" href="https://basepull.app/airtable-to-google-sheets.html">
 <link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css"></head>
 <body>
-<header class="top"><div class="wrap"><a class="brand" href="./"><span class="mark">▤</span>Basepull</a><nav><a href="./#pricing">Pricing</a><a href="airtable-importer-alternative.html">Airtable Importer alternative</a></nav></div></header>
+<header class="top"><div class="wrap"><a class="brand" href="./"><span class="mark">&#9636;</span>Basepull</a><nav><a href="./#pricing">Pricing</a><a href="airtable-importer-alternative.html">Airtable Importer alternative</a></nav></div></header>
 <main class="article">
 <h1>How to sync Airtable to Google Sheets automatically</h1>
-<p>Airtable is where the data gets entered; Google Sheets is where it gets analysed, charted, shared with people who don't have an Airtable seat, and pulled into Looker Studio. Sooner or later every Airtable team asks the same question: <em>how do I get this table into Sheets and keep it there without copying and pasting every morning?</em> Here are the four methods that actually work in 2026, with their real costs and limits.</p>
+<p class="lede">Updated September 2026. Airtable is a good place to <em>enter</em> data and a frustrating place to <em>analyse</em> it. Sooner or later somebody asks for a pivot table, a Looker Studio dashboard, or a sheet a colleague can open without an Airtable seat — and you need the records in Google Sheets&trade;, kept current, without doing it by hand every Monday.</p>
+<p>There are five realistic ways to do that. The differences that matter are not features; they are <strong>how often the data can refresh</strong>, <strong>how many rows you are allowed</strong>, and <strong>whether your records pass through someone else's servers</strong>. Here is each method with those three things spelled out.</p>
 
 <h2>Method 1: Manual CSV export</h2>
-<p>In any Airtable view, open the view menu → <strong>Download CSV</strong>, then File → Import in Google Sheets. It is free and fine for a one-off. The problem is that nothing stays in sync: every refresh is a manual round trip, and importing over an existing tab tends to break formulas that reference it. Use this for a snapshot, not for a report someone looks at weekly.</p>
+<p>In Airtable, open a view, use the &hellip; menu and choose <em>Download CSV</em>, then import the file into Sheets. It is free, it works, and it respects the view you exported (hidden fields stay hidden, filters apply).</p>
+<p>The problem is that it is a photograph, not a feed. Every refresh is a human doing five clicks, and the moment somebody forgets, the dashboard downstream is quietly wrong. This is fine for a one-off analysis and unusable as a recurring report.</p>
 
-<h2>Method 2: A shared view link + IMPORTDATA (mostly dead)</h2>
-<p>Older tutorials suggest sharing a view and pointing <code>=IMPORTDATA()</code> at its CSV URL. Airtable's shared-view CSV endpoints are not stable and require a signed-in session for most bases, so this either fails outright or silently stops updating. We don't recommend building anything on it.</p>
+<h2>Method 2: A shared view link plus IMPORTDATA (mostly dead)</h2>
+<p>The old trick was to publish an Airtable view as a shared link, append <code>?format=csv</code>, and pull it into a cell with <code>=IMPORTDATA(...)</code>. You will still find it in blog posts from a few years ago.</p>
+<p>It rarely survives today. Airtable's share links now sit behind an interstitial that <code>IMPORTDATA</code> cannot follow, so the formula returns an error or a page of HTML. Even when it does work it has real drawbacks: the link is public to anyone who has it, Sheets caches the result on its own schedule rather than yours, and there is a hard limit on the size of the response. Treat this one as a historical footnote.</p>
 
-<h2>Method 3: Zapier or Make</h2>
-<p>Automation platforms can push each <em>new</em> Airtable record into a Sheets row. This is event-based, not a sync: edits and deletions in Airtable are not reflected unless you build extra scenarios, and every record costs a task. At Zapier's pricing, a 2,000-row base that changes frequently blows through the Starter tier quickly. Good for "append form submissions to a sheet", bad for "mirror this table".</p>
+<h2>Method 3: Write your own Apps Script</h2>
+<p>Airtable has a REST API, Google Sheets has Apps Script, and gluing them together is an afternoon of work if you are comfortable with JavaScript. You create a personal access token in Airtable, fetch <code>/v0/{baseId}/{tableId}</code>, page through the records, flatten the field types you care about, and write the result with <code>setValues()</code>. A time-driven trigger runs it hourly.</p>
+<p>This is the cheapest option that actually refreshes on a schedule, and you own every line of it. What people underestimate is the long tail: pagination, rate limits (Airtable allows 5 requests per second per base and will return 429s if you exceed it), attachments and linked records that arrive as arrays of objects, dates that need formatting, columns that get added in Airtable next month, and the quiet failure mode where a trigger dies and nobody notices for three weeks. If you enjoy maintaining that, this is a perfectly good answer.</p>
 
-<h2>Method 4: A scheduled sync add-on (recommended)</h2>
-<p>A Google Sheets add-on that reads the Airtable API on a schedule and rewrites a tab is the only approach that handles inserts, edits and deletes correctly, respects views (hidden fields, filters, sort order) and needs no external automation platform. The options in 2026:</p>
+<h2>Method 4: Zapier or Make</h2>
+<p>Both can watch an Airtable table and append rows to a sheet. They are excellent at <em>event</em> automation — "when a record is marked Won, post to Slack" — and a poor fit for <em>mirroring a table</em>.</p>
+<p>The reason is structural: they think in individual records, not in tables. A new record creates a row, but an edited record does not update the row it created, and a deleted record leaves its row behind. Within a month your sheet and your base disagree. You also pay per task, so a 2,000-row base is 2,000 tasks every time you resync, which gets expensive quickly.</p>
+
+<h2>Method 5: A scheduled sync add-on</h2>
+<p>The category built for this job: an add-on picks a base, table and view, writes the rows into a tab, and repeats on a schedule. No formulas, no code, no drift, because the whole tab is replaced each run.</p>
+<p>The catch is pricing, and it is worth being precise about it, because the headline price is not the price of the thing most people actually want. Almost everyone wants <strong>hourly</strong> refresh, and hourly is the feature vendors reserve for their upper tiers:</p>
 <div class="tablewrap"><table class="compare">
-<tr><th>Tool</th><th>Type</th><th>Scheduled sync price</th><th>Row limit</th><th>Status</th></tr>
-<tr><td>Coupler.io</td><td>Web app + add-on</td><td>from $32/mo</td><td>5,000 rows on Starter</td><td>Active; free tier removed</td></tr>
-<tr><td>Coefficient</td><td>Add-on</td><td>from $49/mo</td><td>varies by plan</td><td>Active; enterprise-oriented</td></tr>
-<tr><td>Airtable Importer (Railsware)</td><td>Add-on</td><td>—</td><td>—</td><td>Closed</td></tr>
-<tr><td>AirTable 2 Google Sheet Sync</td><td>Add-on</td><td>—</td><td>—</td><td>Abandoned (2★, last update 2024)</td></tr>
-<tr><td><strong>Basepull</strong></td><td>Add-on</td><td><strong>$19/mo</strong> (free manual plan)</td><td>200,000</td><td>Active</td></tr>
+<tr><th></th><th>Cheapest plan</th><th>Cheapest plan with <em>hourly</em> refresh</th><th>Row limit</th><th>Data path</th></tr>
+<tr><td>Coupler.io</td><td>$32/mo (daily)</td><td><strong>$259/mo</strong> (Pro)</td><td>5,000/run on Starter</td><td>Via Coupler servers</td></tr>
+<tr><td>Coefficient</td><td>$49/mo (daily)</td><td><strong>$99/user/mo</strong> (Pro)</td><td>5,000 on Starter</td><td>Via Coefficient servers</td></tr>
+<tr><td>Basepull</td><td>Free (1 manual sync)</td><td><strong>$19/mo flat</strong></td><td>200,000/sync on Pro</td><td>Direct: your Google account &rarr; Airtable</td></tr>
 </table></div>
+<p class="muted">Competitor prices checked on their public pricing pages, September 2026. They change; check before you buy.</p>
 
 <h2>Setting up a scheduled sync with Basepull</h2>
+<p>Basepull is our own add-on, so treat this section as what it is — but the setup is short enough to be useful even if you pick something else, because every tool asks for the same four things.</p>
 <ol>
-<li>Install Basepull from the Google Workspace Marketplace and open it from Extensions → Basepull → Open Basepull.</li>
-<li>In Airtable, go to <a href="https://airtable.com/create/tokens" rel="nofollow">Create token</a>, add the scopes <code>data.records:read</code> and <code>schema.bases:read</code>, and grant access to the bases you want to sync. Paste the token into the sidebar. It is stored in your Google account's script properties, not on any third-party server.</li>
-<li>Choose the base, table and (optionally) view. Name the destination tab. Pick "Every hour", "Every 6 hours" or "Daily".</li>
-<li>Click "Run now" once to confirm the columns look right. From then on the tab refreshes itself.</li>
+<li><strong>Create a read-only Airtable token.</strong> In Airtable, go to your account's builder hub and create a personal access token with two scopes: <code>data.records:read</code> and <code>schema.bases:read</code>. Give it access to just the bases you intend to sync. Read-only means the add-on can never modify your base.</li>
+<li><strong>Open the sidebar.</strong> In your spreadsheet: Extensions &rarr; Basepull &rarr; Open Basepull. Paste the token. It is stored in your own Google account's script properties, not on our servers.</li>
+<li><strong>Pick base &rarr; table &rarr; view.</strong> Choosing a view is the important step: the sync inherits the view's hidden fields, field order, filters and sorts, so you shape the output in Airtable rather than with formulas in Sheets.</li>
+<li><strong>Name the destination tab and pick a schedule.</strong> Manual, hourly, every six hours or daily. Each run replaces the tab's contents, so formulas in other tabs that reference it keep working.</li>
 </ol>
-<p class="note">Tip: keep the synced tab as a raw mirror and build your formulas, pivots and charts on other tabs that reference it with <code>=QUERY('Leads'!A:Z, …)</code>. That way the hourly rewrite never breaks anything.</p>
 
-<h2>How Airtable field types map to Sheets cells</h2>
+<h2>How Airtable field types land in Sheets</h2>
+<p>This is where most home-made scripts get untidy, so it is worth knowing what to expect from any tool you choose:</p>
 <ul>
-<li>Single line text, long text, number, currency, percent, date, checkbox → the same value.</li>
-<li>Single select → the option name. Multiple select → names joined with commas.</li>
-<li>Linked records → the primary field of each linked record, comma-separated (or the record IDs if you sync the linked table too).</li>
-<li>Lookups and rollups → flattened the same way as their underlying type.</li>
-<li>Attachments → the file URLs, comma-separated. Use <code>=IMAGE()</code> in Sheets if you want thumbnails.</li>
-<li>Collaborators → the person's name. Formula errors → <code>#ERROR</code>.</li>
+<li><strong>Single line / long text / number / currency</strong> &mdash; straight across.</li>
+<li><strong>Date and date-time</strong> &mdash; written as real dates, so Sheets can sort and chart them rather than treating them as strings.</li>
+<li><strong>Single select</strong> &mdash; the option name. <strong>Multiple select</strong> &mdash; joined with commas.</li>
+<li><strong>Linked records</strong> &mdash; the primary field values of the linked rows, comma-joined, rather than record IDs.</li>
+<li><strong>Lookups and rollups</strong> &mdash; their computed values.</li>
+<li><strong>Attachments</strong> &mdash; the file URLs. Note that Airtable's attachment URLs now expire after a couple of hours, so use them for reference, not as permanent image links.</li>
+<li><strong>Checkbox</strong> &mdash; TRUE / FALSE.</li>
+<li><strong>Collaborator</strong> &mdash; the person's name.</li>
 </ul>
 
 <h2>Which method should you use?</h2>
-<p>If you need a snapshot once, export CSV. If you need every new form submission appended to a log, Zapier is fine. If you need a table or view in Sheets that is <em>always current</em> — for a dashboard, a client report or a Looker Studio source — use a scheduled add-on. Basepull does exactly that for $19 a month, or free if a manual refresh is enough.</p>
-<p><a class="btn primary" href="./#install">Install Basepull</a></p>
+<p>Be honest about the refresh interval you need, because it decides everything:</p>
+<ul>
+<li><strong>Once, for an analysis</strong> &mdash; CSV export. Do not automate a one-off.</li>
+<li><strong>Weekly, and you don't mind doing it</strong> &mdash; CSV export, or a free manual sync.</li>
+<li><strong>Daily or hourly, and you write code</strong> &mdash; Apps Script, if you will still maintain it in six months.</li>
+<li><strong>Daily or hourly, and you want it to just work</strong> &mdash; a scheduled add-on. Compare on the price of the tier that actually includes your interval, not the entry price.</li>
+<li><strong>Reacting to individual record changes</strong> &mdash; Zapier or Make. That is genuinely what they are for.</li>
+</ul>
+<p>If you want the hourly case without a three-figure bill, that is the gap Basepull was built for: <a href="./#pricing">$19/month flat, up to 200,000 rows per sync</a>, with a free plan so you can check it works on your data first.</p>
+<p><a class="btn primary" href="./#install">Get Basepull</a></p>
 </main>
-<footer><div class="wrap">© 2026 Omoseka Inc. · <a href="terms.html">Terms</a><a href="privacy.html">Privacy</a> · Airtable is a trademark of Formagrid Inc.</div></footer>
+<footer><div class="wrap">&copy; 2026 Omoseka Inc. &middot; <a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="tokushoho.html">&#29305;&#21830;&#27861;</a><a href="mailto:mail@omoseka.com">Contact</a> &middot; Google Sheets&trade; is a trademark of Google LLC. Airtable&reg; is a trademark of Formagrid Inc. Basepull is not affiliated with, endorsed or sponsored by Google or Airtable.</div></footer>
 </body></html>

@@ -12,6 +12,7 @@
   ],
   "urlFetchWhitelist": [
     "https://api.airtable.com/",
+    "https://airtable.com/",
     "https://script.google.com/"
   ]
 }

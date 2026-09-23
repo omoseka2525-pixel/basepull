@@ -170,3 +170,37 @@ $('forget').onclick = async function(ev){ ev.preventDefault(); if(!confirm('Remo
 rpc('bpInit').then(function(i){ S.init = i; render(); if(i.hasToken && !i.jobs.length) openEditor(null); }).catch(function(e){ msg(esc(e.message),'err'); });
 </script>
 </body></html>
+
+<script>
+(function(){
+  function bpFixTokenBox(){
+    var box = document.getElementById('tokenBox');
+    if (!box || box.getAttribute('data-bp-oauth') === '1') return;
+    box.setAttribute('data-bp-oauth','1');
+    box.innerHTML = '<p style="margin:0 0 10px">Connect your Airtable account to get started. Basepull never asks for your API key.</p>' +
+      '<a id="bpConnect" href="#" target="_blank" rel="noopener" style="display:inline-block;padding:8px 14px;background:#2d7ff9;color:#fff;border-radius:6px;text-decoration:none;font-weight:600">Connect Airtable</a> ' +
+      '<button id="bpConnected" type="button" style="margin-left:8px">I have connected</button>' +
+      '<div id="bpConnectMsg" style="margin-top:10px;color:#666"></div>';
+    var msg = document.getElementById('bpConnectMsg');
+    var link = document.getElementById('bpConnect');
+    msg.textContent = 'Preparing the secure Airtable link...';
+    google.script.run
+      .withSuccessHandler(function(u){ link.href = u; msg.textContent = ''; })
+      .withFailureHandler(function(e){ msg.textContent = e.message; })
+      .bpAuthUrl();
+    document.getElementById('bpConnected').onclick = function(){
+      msg.textContent = 'Checking...';
+      google.script.run
+        .withSuccessHandler(function(s){ try { render(s); } catch(e) { location.reload(); } })
+        .withFailureHandler(function(e){ msg.textContent = e.message; })
+        .bpInit();
+    };
+  }
+  var origRender = window.render;
+  if (typeof origRender === 'function') {
+    window.render = function(){ var r = origRender.apply(this, arguments); try { bpFixTokenBox(); } catch(e){} return r; };
+  }
+  setTimeout(bpFixTokenBox, 400);
+  setTimeout(bpFixTokenBox, 2000);
+})();
+</script>

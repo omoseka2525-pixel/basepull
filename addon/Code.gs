@@ -257,3 +257,129 @@ function bpHmac(msg, secret) {
   var bytes = Utilities.computeHmacSha256Signature(msg, secret);
   return bytes.map(function (b) { var v = (b < 0 ? b + 256 : b).toString(16); return v.length < 2 ? '0' + v : v; }).join('');
 }
+
+
+// ---------- Airtable OAuth 2.0 (PKCE). These override the older token-based functions. ----------
+var BP_OAUTH = {
+  CLIENT_ID: 'a868b01c-80be-45a5-b106-ef4d9876f9d5',
+  AUTHORIZE: 'https://airtable.com/oauth2/v1/authorize',
+  TOKEN_URL: 'https://airtable.com/oauth2/v1/token',
+  SCOPE: 'data.records:read schema.bases:read'
+};
+
+function bpRedirectUri() {
+  return 'https://script.google.com/macros/d/' + ScriptApp.getScriptId() + '/usercallback';
+}
+
+function bpB64url_(bytes) {
+  return Utilities.base64EncodeWebSafe(bytes).replace(/=+$/, '');
+}
+
+function bpVerifier_() {
+  var chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_';
+  var out = '';
+  for (var i = 0; i < 64; i++) out += chars.charAt(Math.floor(Math.random() * chars.length));
+  return out;
+}
+function bpAuthUrl() {
+  var p = bpUserProps();
+  var v = bpVerifier_();
+  p.setProperty('bp.pkce', v);
+  var challenge = bpB64url_(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, v, Utilities.Charset.UTF_8));
+  var state = ScriptApp.newStateToken().withMethod('bpAuthCallback').withTimeout(1800).createToken();
+  return BP_OAUTH.AUTHORIZE +
+    '?client_id=' + encodeURIComponent(BP_OAUTH.CLIENT_ID) +
+    '&redirect_uri=' + encodeURIComponent(bpRedirectUri()) +
+    '&response_type=code' +
+    '&scope=' + encodeURIComponent(BP_OAUTH.SCOPE) +
+    '&state=' + encodeURIComponent(state) +
+    '&code_challenge=' + encodeURIComponent(challenge) +
+    '&code_challenge_method=S256';
+}
+
+function bpAuthCallback(request) {
+  var p = bpUserProps();
+  try {
+    if (request.parameter.error) throw new Error(request.parameter.error);
+    var res = UrlFetchApp.fetch(BP_OAUTH.TOKEN_URL, {
+      method: 'post',
+      muteHttpExceptions: true,
+      payload: {
+        grant_type: 'authorization_code',
+        code: request.parameter.code,
+        redirect_uri: bpRedirectUri(),
+        client_id: BP_OAUTH.CLIENT_ID,
+        code_verifier: p.getProperty('bp.pkce') || ''
+      }
+    });
+    if (res.getResponseCode() !== 200) throw new Error('HTTP ' + res.getResponseCode() + ' ' + res.getContentText());
+    bpStoreAuth_(JSON.parse(res.getContentText()));
+    p.deleteProperty('bp.pkce');
+    return HtmlService.createHtmlOutput('<p style="font:14px/1.6 system-ui,sans-serif;padding:24px">Airtable connected. You can close this tab and go back to your spreadsheet.</p>');
+  } catch (e) {
+    return HtmlService.createHtmlOutput('<p style="font:14px/1.6 system-ui,sans-serif;padding:24px">Could not connect Airtable.<br>' + e.message + '</p>');
+  }
+}
+
+function bpStoreAuth_(t) {
+  var p = bpUserProps();
+  p.setProperty('bp.oauth', JSON.stringify({
+    a: t.access_token,
+    r: t.refresh_token,
+    e: Date.now() + (((t.expires_in || 3600) - 120) * 1000)
+  }));
+  p.setProperty('bp.token', 'oauth');
+}
+
+function bpRefreshAuth_(o) {
+  var res = UrlFetchApp.fetch(BP_OAUTH.TOKEN_URL, {
+    method: 'post',
+    muteHttpExceptions: true,
+    payload: { grant_type: 'refresh_token', refresh_token: o.r, client_id: BP_OAUTH.CLIENT_ID }
+  });
+  if (res.getResponseCode() !== 200) {
+    bpForgetToken();
+    throw new Error('The Airtable connection has expired. Click Connect Airtable in the sidebar to reconnect.');
+  }
+  var t = JSON.parse(res.getContentText());
+  if (!t.refresh_token) t.refresh_token = o.r;
+  bpStoreAuth_(t);
+  return t.access_token;
+}
+
+function bpToken() {
+  var raw = bpUserProps().getProperty('bp.oauth');
+  if (!raw) throw new Error('Airtable is not connected. Click Connect Airtable in the Basepull sidebar.');
+  var o = JSON.parse(raw);
+  if (!o.a || Date.now() >= o.e) return bpRefreshAuth_(o);
+  return o.a;
+}
+
+function bpSaveToken() {
+  throw new Error('Basepull now connects to Airtable with OAuth. Click Connect Airtable in the sidebar.');
+}
+
+function bpForgetToken() {
+  var p = bpUserProps();
+  p.deleteProperty('bp.oauth');
+  p.deleteProperty('bp.token');
+  p.deleteProperty('bp.pkce');
+  return true;
+}
+
+// bpInit oauth override
+function bpInit() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var email = Session.getEffectiveUser().getEmail();
+  var plan = bpPlanInfo();
+  return {
+    hasToken: !!bpUserProps().getProperty('bp.oauth'),
+    jobs: bpGetJobs(ss.getId()),
+    sheets: ss.getSheets().map(function (s) { return s.getName(); }),
+    plan: plan,
+    email: email,
+    checkoutUrl: BP_CONFIG.CHECKOUT_URL + (BP_CONFIG.CHECKOUT_URL.indexOf('?') < 0 ? '?' : '&') + 'prefilled_email=' + encodeURIComponent(email),
+    portalUrl: BP_CONFIG.PORTAL_URL,
+    siteUrl: BP_CONFIG.SITE_URL
+  };
+}

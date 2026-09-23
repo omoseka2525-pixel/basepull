@@ -41,8 +41,8 @@
 <h2>Setting up a scheduled sync with Basepull</h2>
 <p>Basepull is our own add-on, so treat this section as what it is — but the setup is short enough to be useful even if you pick something else, because every tool asks for the same four things.</p>
 <ol>
-<li><strong>Create a read-only Airtable token.</strong> In Airtable, go to your account's builder hub and create a personal access token with two scopes: <code>data.records:read</code> and <code>schema.bases:read</code>. Give it access to just the bases you intend to sync. Read-only means the add-on can never modify your base.</li>
-<li><strong>Open the sidebar.</strong> In your spreadsheet: Extensions &rarr; Basepull &rarr; Open Basepull. Paste the token. It is stored in your own Google account's script properties, not on our servers.</li>
+<li><strong>Install Basepull.</strong> Add it to Google Sheets from the Google Workspace Marketplace. There is nothing to configure yet.</li>
+<li><strong>Connect Airtable.</strong> In your spreadsheet: Extensions &rarr; Basepull &rarr; Open Basepull, then click <strong>Connect Airtable</strong>. Airtable asks you to approve read-only access (<code>data.records:read</code> and <code>schema.bases:read</code>) to the bases you choose. Basepull never asks for an API key.</li>
 <li><strong>Pick base &rarr; table &rarr; view.</strong> Choosing a view is the important step: the sync inherits the view's hidden fields, field order, filters and sorts, so you shape the output in Airtable rather than with formulas in Sheets.</li>
 <li><strong>Name the destination tab and pick a schedule.</strong> Manual, hourly, every six hours or daily. Each run replaces the tab's contents, so formulas in other tabs that reference it keep working.</li>
 </ol>

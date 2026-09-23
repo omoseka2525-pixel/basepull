@@ -44,7 +44,7 @@
 <h2>Migrating from Airtable Importer</h2>
 <ol>
 <li><strong>Write down what you had.</strong> For each old import, note the base, table, view and the tab name it wrote to. Do this before you remove the old add-on.</li>
-<li><strong>Create a read-only Airtable token.</strong> Scopes <code>data.records:read</code> and <code>schema.bases:read</code>, limited to the bases you sync. Airtable Importer used an older key format; you will need a new personal access token whichever tool you move to.</li>
+<li><strong>Connect Airtable.</strong> Click <strong>Connect Airtable</strong> in the Basepull sidebar and approve read-only access (<code>data.records:read</code>, <code>schema.bases:read</code>) for the bases you sync. Nothing to copy or paste, and you can revoke it from Airtable at any time.</li>
 <li><strong>Recreate each import as a sync</strong> pointing at the same tab name. Basepull replaces the tab's contents on every run, so any formulas, pivot tables or Looker Studio reports that reference that tab keep working untouched.</li>
 <li><strong>Run each one once manually</strong> and compare the row count against Airtable before you trust it.</li>
 <li><strong>Then set the schedule</strong> and remove the old add-on.</li>
@@ -53,7 +53,7 @@
 <h2>Common questions</h2>
 <p><strong>Will my old imports keep working?</strong> No. A closed listing stops being installable and eventually stops running; plan the move rather than waiting for the day it breaks.</p>
 <p><strong>Is there still a free option?</strong> For manual refreshes, yes &mdash; CSV export costs nothing, and Basepull's free plan gives you one manual sync of up to 1,000 rows. For scheduled refreshes, free options have effectively disappeared; the honest answer is that somebody has to run the schedule and that costs something.</p>
-<p><strong>Do I have to give a tool access to my whole Airtable account?</strong> You should not have to. Personal access tokens are scoped to specific bases and can be read-only &mdash; use that.</p>
+<p><strong>Do I have to give a tool access to my whole Airtable account?</strong> You should not have to. Basepull uses Airtable's official OAuth flow: you choose which bases to grant, the access is read-only, and you can revoke it from your Airtable account at any time.</p>
 <p><a class="btn primary" href="./#install">Get Basepull</a></p>
 </main>
 <footer><div class="wrap">&copy; 2026 Omoseka Inc. &middot; <a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="tokushoho.html">&#29305;&#21830;&#27861;</a><a href="mailto:mail@omoseka.com">Contact</a> &middot; Airtable Importer and Coupler.io are products of Railsware; Coefficient is a product of Coefficient, Inc.; Basepull is unaffiliated with all of them. Google Sheets&trade; is a trademark of Google LLC. Airtable&reg; is a trademark of Formagrid Inc.</div></footer>
